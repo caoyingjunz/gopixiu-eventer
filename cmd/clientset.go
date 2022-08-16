@@ -2,28 +2,40 @@ package cmd
 
 import (
 	"flag"
+	"path/filepath"
+
 	"github.com/elastic/go-elasticsearch/v8"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
 	"k8s.io/client-go/util/homedir"
-	"path/filepath"
 )
+
+var eventFlags = InitFlags()
+
+func InitFlags() *EventFlags {
+	var eventFlags EventFlags
+
+	if home := homedir.HomeDir(); home != "" {
+		flag.StringVar(&eventFlags.KubeConfig, "kubernetes.kubeConfig", filepath.Join(home, ".kube", "config"), "(可选) kubeconfig 文件的绝对路径")
+	} else {
+		flag.StringVar(&eventFlags.KubeConfig, "kubernetes.kubeConfig", eventFlags.KubeConfig, "kubeconfig 文件的绝对路径")
+	}
+
+	flag.StringVar(&eventFlags.Address, "elasticsearch.address", eventFlags.Address, "(可选) elasticsearch address 地址")
+	flag.StringVar(&eventFlags.UserName, "elasticsearch.username", eventFlags.UserName, "(可选) elasticsearch 用户名")
+	flag.StringVar(&eventFlags.Password, "elasticsearch.password", eventFlags.UserName, "(可选) elasticsearch 用户名")
+	
+	flag.Parse()
+	return &eventFlags
+}
 
 func InitClient() (*kubernetes.Clientset, error) {
 	var err error
 	var config *rest.Config
-	var kubeconfig *string
-
-	if home := homedir.HomeDir(); home != "" {
-		kubeconfig = flag.String("kubeconfig", filepath.Join(home, ".kube", "config"), "(可选) kubeconfig 文件的绝对路径")
-	} else {
-		kubeconfig = flag.String("kubeconfig", "", "kubeconfig 文件的绝对路径")
-	}
-	flag.Parse()
 
 	if config, err = rest.InClusterConfig(); err != nil {
-		if config, err = clientcmd.BuildConfigFromFlags("", *kubeconfig); err != nil {
+		if config, err = clientcmd.BuildConfigFromFlags("", eventFlags.KubeConfig); err != nil {
 			panic(err.Error())
 		}
 	}
@@ -39,15 +51,19 @@ func InitElasticSearch() (*elasticsearch.Client, error) {
 	var es *elasticsearch.Client
 	cfg := elasticsearch.Config{
 		Addresses: []string{
-			"http://10.50.7.126:9200",
+			eventFlags.Address,
 		},
-		Username: "elastic",
-		Password: "elastic",
+		Username: eventFlags.UserName,
+		Password: eventFlags.Password,
 		//		CACert: cert,
 	}
 	es, err = elasticsearch.NewClient(cfg)
 	if err != nil {
 		return nil, err
+	}
+	_, err = es.Info()
+	if err != nil {
+		panic(err.Error())
 	}
 	return es, nil
 }

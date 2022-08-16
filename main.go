@@ -1,12 +1,13 @@
 package main
 
 import (
-	"github.com/darianJmy/event-collect/cmd"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/fields"
 	"k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/util/workqueue"
 	"k8s.io/klog/v2"
+
+	"github.com/darianJmy/event-collect/cmd"
 )
 
 
@@ -32,10 +33,8 @@ func main() {
 				queue.Add(key)
 			}
 		},
-		UpdateFunc: func(oldObj, newObj interface{}) {
-		},
-		DeleteFunc: func(obj interface{}) {
-		},
+		UpdateFunc: func(oldObj, newObj interface{}) {},
+		DeleteFunc: func(obj interface{}) {},
 	}, cache.Indexers{})
 
 	// 实例化 controller
