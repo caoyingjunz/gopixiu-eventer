@@ -4,7 +4,7 @@ ARG APP
 ENV GOPROXY=${GOPROXY}
 WORKDIR /go/gopixiu-eventer
 COPY . .
-RUN CGO_ENABLED=0 go build -a -o ./dist/${APP} cmd/${APP}/${APP}.go
+RUN CGO_ENABLED=0 go build -a -o ./dist/${APP} main.go
 
 FROM jacky06/static:nonroot
 ARG APP
