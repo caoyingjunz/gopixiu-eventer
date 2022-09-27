@@ -11,7 +11,7 @@ import (
 	"k8s.io/client-go/util/homedir"
 )
 
-var eventFlags = InitFlags()
+var eventFlag = InitFlags()
 
 func InitFlags() *EventFlags {
 	var eventFlags EventFlags
@@ -25,7 +25,7 @@ func InitFlags() *EventFlags {
 	flag.StringVar(&eventFlags.Address, "elasticsearch.address", eventFlags.Address, "(可选) elasticsearch address 地址")
 	flag.StringVar(&eventFlags.UserName, "elasticsearch.username", eventFlags.UserName, "(可选) elasticsearch 用户名")
 	flag.StringVar(&eventFlags.Password, "elasticsearch.password", eventFlags.UserName, "(可选) elasticsearch 用户名")
-	
+
 	flag.Parse()
 	return &eventFlags
 }
@@ -35,7 +35,7 @@ func InitClient() (*kubernetes.Clientset, error) {
 	var config *rest.Config
 
 	if config, err = rest.InClusterConfig(); err != nil {
-		if config, err = clientcmd.BuildConfigFromFlags("", eventFlags.KubeConfig); err != nil {
+		if config, err = clientcmd.BuildConfigFromFlags("", eventFlag.KubeConfig); err != nil {
 			panic(err.Error())
 		}
 	}
@@ -51,10 +51,10 @@ func InitElasticSearch() (*elasticsearch.Client, error) {
 	var es *elasticsearch.Client
 	cfg := elasticsearch.Config{
 		Addresses: []string{
-			eventFlags.Address,
+			eventFlag.Address,
 		},
-		Username: eventFlags.UserName,
-		Password: eventFlags.Password,
+		Username: eventFlag.UserName,
+		Password: eventFlag.Password,
 		//		CACert: cert,
 	}
 	es, err = elasticsearch.NewClient(cfg)
